@@ -1,19 +1,12 @@
 {
-  "name": "harmonix-mobile-version",
+  "name": "harmonix-mobile",
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@11.3.0",
   "scripts": {
-    "dev": "turbo run dev --parallel",
-    "dev:api": "pnpm db:generate && pnpm --filter @harmonix-mobile/api dev",
+    "dev": "pnpm dev:mobile",
     "dev:mobile": "pnpm --filter @harmonix-mobile/mobile dev",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "db:generate": "pnpm --filter @harmonix-mobile/database db:generate",
-    "db:migrate": "pnpm --filter @harmonix-mobile/database db:migrate",
-    "db:deploy": "pnpm --filter @harmonix-mobile/database db:deploy",
-    "db:studio": "pnpm --filter @harmonix-mobile/database db:studio"
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "turbo": "latest",

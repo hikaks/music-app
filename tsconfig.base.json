@@ -14,8 +14,7 @@
     "baseUrl": ".",
     "paths": {
       "@harmonix-mobile/shared": ["packages/shared/src/index.ts"],
-      "@harmonix-mobile/shared/*": ["packages/shared/src/*"],
-      "@harmonix-mobile/database": ["packages/database/src/index.ts"]
+      "@harmonix-mobile/shared/*": ["packages/shared/src/*"]
     }
   }
 }

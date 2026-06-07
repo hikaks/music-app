@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import { API_BASE_URL } from "@/lib/api";
+import { INSFORGE_URL } from "@/lib/insforge";
 import { sourcePreviewLabels } from "@/theme/tokens";
 
 export default function HomeScreen() {
@@ -8,13 +8,13 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <Text style={styles.eyebrow}>Harmonix Mobile</Text>
-      <Text style={styles.title}>Phase 0 scaffold is ready.</Text>
+      <Text style={styles.title}>Mobile shell is ready.</Text>
       <Text style={styles.body}>
-        Mobile shell, API placeholder, and shared music types are wired for the next phase.
+        Expo, shared music types, and InsForge backend setup are wired for the next phase.
       </Text>
       <View style={styles.panel}>
-        <Text style={styles.panelLabel}>API</Text>
-        <Text style={styles.panelValue}>{API_BASE_URL}</Text>
+        <Text style={styles.panelLabel}>InsForge</Text>
+        <Text style={styles.panelValue}>{INSFORGE_URL}</Text>
       </View>
       <View style={styles.sources}>
         {sourcePreviewLabels.map((source) => (
