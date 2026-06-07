@@ -1,0 +1,33 @@
+{
+  "name": "@harmonix-mobile/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "pnpm db:generate && tsc --noEmit",
+    "lint": "echo \"lint not configured yet\"",
+    "test": "echo \"tests not configured yet\"",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:validate": "prisma validate"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "latest",
+    "@prisma/client": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "dotenv": "latest",
+    "prisma": "latest",
+    "typescript": "~5.9.3"
+  }
+}

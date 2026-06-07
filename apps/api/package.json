@@ -1,0 +1,28 @@
+{
+  "name": "@harmonix-mobile/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"lint not configured yet\"",
+    "test": "echo \"tests not configured yet\""
+  },
+  "dependencies": {
+    "@hono/node-server": "latest",
+    "@harmonix-mobile/database": "workspace:*",
+    "@harmonix-mobile/shared": "workspace:*",
+    "@better-auth/prisma-adapter": "latest",
+    "better-auth": "latest",
+    "dotenv": "latest",
+    "zod": "latest",
+    "hono": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "~5.9.3"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@harmonix-mobile/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./*": {
+      "types": "./src/*.ts",
+      "import": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"lint not configured yet\"",
+    "test": "echo \"tests not configured yet\""
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

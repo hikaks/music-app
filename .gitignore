@@ -1,0 +1,11 @@
+node_modules/
+.turbo/
+.expo/
+dist/
+build/
+coverage/
+packages/database/src/generated/
+*.log
+.env
+.env.local
+.env.*.local

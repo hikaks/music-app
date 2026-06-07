@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@harmonix-mobile/shared": ["packages/shared/src/index.ts"],
+      "@harmonix-mobile/shared/*": ["packages/shared/src/*"],
+      "@harmonix-mobile/database": ["packages/database/src/index.ts"]
+    }
+  }
+}

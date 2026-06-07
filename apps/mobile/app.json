@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Harmonix Mobile",
+    "slug": "harmonix-mobile",
+    "scheme": "harmonix",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.harmonix.mobile"
+    },
+    "android": {
+      "package": "app.harmonix.mobile"
+    },
+    "plugins": ["expo-router"]
+  }
+}
