@@ -83,7 +83,7 @@ Backend aktif saat ini:
 https://5izff6gg.ap-southeast.insforge.app
 ```
 
-Catatan penting: metadata backend aktif belum berisi schema musik Harmonix. Backend masih memuat tabel non-Harmonix seperti `translation_requests`, `plans`, `user_profiles`, dan tabel AI usage. Karena itu, migration schema musik harus dilakukan hati-hati dan tidak boleh menghapus tabel aktif tanpa konfirmasi eksplisit.
+Status 2026-06-07: schema musik Harmonix sudah diterapkan ke backend aktif lewat migration InsForge. Tidak ada reset/drop/truncate; migration hanya menambah tabel Harmonix, RLS, policy, index, trigger `updated_at`, dan permission katalog read-only.
 
 Target tabel musik sebaiknya memakai snake_case agar nyaman untuk InsForge/PostgREST:
 

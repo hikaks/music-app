@@ -1,9 +1,9 @@
-import { Redirect } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/auth-context";
 import { colors } from "@/theme/tokens";
 
-export default function EntryScreen() {
+export default function AuthLayout() {
   const { isLoading, user } = useAuth();
 
   if (isLoading) {
@@ -14,7 +14,18 @@ export default function EntryScreen() {
     );
   }
 
-  return <Redirect href={user ? "/(app)" : "/(auth)/sign-in"} />;
+  if (user) {
+    return <Redirect href="/(app)" />;
+  }
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

@@ -20,7 +20,7 @@ Checklist ini hanya memuat pekerjaan yang berkaitan dengan mobile app dan InsFor
 - [x] Hapus scaffold non-InsForge yang tidak dipakai.
 - [x] Ubah mobile placeholder agar menampilkan backend InsForge.
 - [x] Hapus alias TypeScript dan script placeholder yang mengarah ke struktur lama.
-- [ ] Ambil dan simpan anon key di env lokal mobile.
+- [x] Ambil dan simpan anon key di env lokal mobile.
 - [x] Jalankan typecheck setelah lockfile dirapikan.
 
 ## Phase 1 - Mobile Foundation
@@ -28,53 +28,54 @@ Checklist ini hanya memuat pekerjaan yang berkaitan dengan mobile app dan InsFor
 - [x] Pertahankan Expo app di `apps/mobile`.
 - [x] Pertahankan shared music/source types di `packages/shared`.
 - [x] Siapkan `src/lib/insforge.ts`.
-- [ ] Validasi `@insforge/sdk` di React Native runtime.
-- [ ] Buat app shell dengan route group auth dan tabs.
-- [ ] Buat theme tokens untuk mobile UI.
+- [~] Validasi `@insforge/sdk` di React Native runtime.
+- [x] Buat app shell dengan route group auth dan tabs.
+- [x] Buat theme tokens untuk mobile UI.
 - [ ] Tambahkan TanStack Query bila mulai ada server state kompleks.
 - [ ] Tambahkan Expo SecureStore bila session/token perlu persist manual.
 
 ## Phase 2 - InsForge Auth
 
-- [ ] Pastikan auth config InsForge cocok untuk mobile.
+- [x] Pastikan auth config InsForge cocok untuk mobile.
 - [ ] Tambahkan redirect URL/scheme mobile jika OAuth dipakai.
-- [ ] Buat screen sign in.
-- [ ] Buat screen sign up.
-- [ ] Buat screen verify email code.
-- [ ] Buat logout action.
-- [ ] Buat guard untuk signed-in dan signed-out state.
+- [x] Buat screen sign in.
+- [x] Buat screen sign up.
+- [x] Buat screen verify email code.
+- [x] Buat logout action.
+- [x] Buat guard untuk signed-in dan signed-out state.
 
 ## Phase 3 - InsForge Database Musik
 
-- [!] Backend aktif belum berisi schema Harmonix dan masih berisi tabel non-Harmonix.
-- [ ] Putuskan memakai project InsForge aktif atau project baru khusus Harmonix.
-- [ ] Buat migration untuk tabel musik snake_case.
-- [ ] Buat RLS untuk semua tabel user-scoped.
-- [ ] Verifikasi policy sebagai authenticated user, bukan admin key.
-- [ ] Dokumentasikan setiap tabel di `docs/insforge-backend-database.md`.
+- [x] Pakai project InsForge aktif untuk schema Harmonix.
+- [x] Buat migration untuk tabel musik snake_case.
+- [x] Buat migration permission untuk katalog track read-only.
+- [x] Buat RLS untuk semua tabel user-scoped.
+- [x] Verifikasi schema, grant, index, trigger, dan policy lewat MCP/CLI.
+- [ ] Verifikasi policy sebagai authenticated user nyata dari mobile/auth token.
+- [x] Dokumentasikan setiap tabel di `docs/insforge-backend-database.md`.
 
 Target tabel:
 
-- [ ] `profiles`
-- [ ] `source_configs`
-- [ ] `source_accounts`
-- [ ] `canonical_tracks`
-- [ ] `source_tracks`
-- [ ] `playlists`
-- [ ] `playlist_items`
-- [ ] `devices`
-- [ ] `local_assets`
-- [ ] `play_history`
+- [x] `profiles`
+- [x] `source_configs`
+- [x] `source_accounts`
+- [x] `canonical_tracks`
+- [x] `source_tracks`
+- [x] `playlists`
+- [x] `playlist_items`
+- [x] `devices`
+- [x] `local_assets`
+- [x] `play_history`
 
 ## Phase 4 - Mobile Music UX
 
-- [ ] Home screen.
-- [ ] Search screen.
-- [ ] Library screen.
-- [ ] Playlists screen.
-- [ ] Settings screen.
-- [ ] Playlist create/edit flow.
-- [ ] Source enable/disable flow.
+- [x] Home screen.
+- [x] Search screen.
+- [x] Library screen.
+- [x] Playlists screen.
+- [x] Settings screen.
+- [~] Playlist create/edit flow.
+- [x] Source enable/disable flow.
 - [ ] Recently played flow.
 
 ## Phase 5 - Player

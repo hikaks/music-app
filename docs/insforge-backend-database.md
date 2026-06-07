@@ -17,15 +17,29 @@ Dokumen ini menjadi pegangan backend database untuk Harmonix Mobile. Repo sekara
 
 ## Status Backend Saat Ini
 
-Metadata InsForge MCP menunjukkan backend aktif belum berisi schema musik Harmonix. Tabel yang terlihat saat ini masih berasal dari app lain, misalnya:
+Metadata InsForge MCP dan CLI pada 2026-06-07 menunjukkan backend aktif sudah berisi schema database Harmonix di schema `public`.
 
-- `users`, `user_profiles`, `devices`
-- `translation_requests`, `translation_results`
-- `plans`, `subscriptions`, `payments`, `usage_quotas`
-- `ai_models`, `ai_providers`, `ai_usage_logs`
-- `languages`, `tones`, `prompt_templates`
+Migration yang sudah diterapkan:
 
-Sampel schema menunjukkan RLS belum aktif untuk tabel yang dicek. Karena backend aktif sudah memiliki data dan tabel non-Harmonix, jangan menjalankan reset, drop, atau destructive migration tanpa konfirmasi eksplisit.
+- `20260607115730_create-harmonix-music-schema.sql`
+- `20260607120241_tighten-harmonix-catalog-permissions.sql`
+
+Tabel `public` aktif:
+
+- `profiles`
+- `source_configs`
+- `source_accounts`
+- `canonical_tracks`
+- `source_tracks`
+- `playlists`
+- `playlist_items`
+- `devices`
+- `local_assets`
+- `play_history`
+
+Semua tabel masih kosong setelah migration. Storage bucket dan InsForge Functions juga masih kosong. Auth aktif dengan email verification metode `code`, reset password metode `code`, OAuth provider `google` dan `github`, signup aktif, dan SMTP belum dikonfigurasi.
+
+Tidak ada reset, drop table, truncate, atau perubahan destruktif ke data existing. Migration hanya menambah schema Harmonix dan memperketat grant katalog global.
 
 ## Pola Akses Mobile
 
@@ -62,18 +76,18 @@ Jangan memasukkan admin key, user API key, database connection string, OAuth sec
 
 Gunakan nama tabel snake_case agar nyaman dipakai lewat InsForge/PostgREST dan SDK:
 
-| Tabel | Fungsi |
-|---|---|
-| `profiles` | Profil app tambahan untuk user InsForge. |
-| `source_configs` | Preferensi source musik per user. |
-| `source_accounts` | Koneksi akun eksternal per source. |
-| `canonical_tracks` | Normalisasi track lintas source. |
-| `source_tracks` | Metadata track per provider/source. |
-| `playlists` | Playlist milik user. |
-| `playlist_items` | Isi playlist dan urutan track. |
-| `devices` | Device user dan push token. |
-| `local_assets` | Metadata file lokal per user/device. |
-| `play_history` | Riwayat pemutaran. |
+| Tabel | Fungsi | Akses mobile |
+|---|---|---|
+| `profiles` | Profil app tambahan untuk user InsForge. | CRUD row milik user. |
+| `source_configs` | Preferensi source musik per user. | CRUD row milik user. |
+| `source_accounts` | Metadata koneksi akun eksternal per source. Tidak menyimpan token provider. | CRUD row milik user. |
+| `canonical_tracks` | Normalisasi track lintas source. | Read-only untuk authenticated user. |
+| `source_tracks` | Metadata track per provider/source. | Read-only untuk authenticated user. |
+| `playlists` | Playlist milik user. | CRUD row milik user. |
+| `playlist_items` | Isi playlist dan urutan track. | CRUD row milik user. |
+| `devices` | Device user dan push token. | CRUD row milik user. |
+| `local_assets` | Metadata file lokal per user/device. | CRUD row milik user. |
+| `play_history` | Riwayat pemutaran. | CRUD row milik user. |
 
 Enum source musik:
 
@@ -83,12 +97,12 @@ local | spotify | ytmusic | deezer | jamendo | audius | soundcloud
 
 Relasi inti:
 
-- Semua data user-scoped harus punya `user_id`.
-- `profiles.user_id` unik.
+- Semua data user-scoped punya `user_id uuid not null default auth.uid()`.
+- `profiles.user_id` adalah primary key.
 - `source_configs` unik per `user_id + source`.
 - `source_accounts` unik per `user_id + source`.
 - `source_tracks` unik per `source + source_id`.
-- `playlist_items` punya `playlist_id`, `track_id`, dan `position`.
+- `playlist_items` punya `playlist_id`, `track_id`, `position`, dan composite FK `(playlist_id, user_id)` ke `playlists(id, user_id)`.
 - `local_assets` unik per `user_id + local_key_hash`.
 - `play_history` mengarah ke `user_id` dan `track_id`.
 
@@ -96,14 +110,15 @@ Relasi inti:
 
 Jika mobile membaca/menulis database langsung lewat SDK, RLS wajib aktif.
 
-Policy minimum untuk tabel user-scoped:
+Status RLS saat ini:
 
-- User hanya bisa `select` row dengan `user_id = auth.uid()`.
-- User hanya bisa `insert` row dengan `user_id = auth.uid()`.
-- User hanya bisa `update/delete` row miliknya sendiri.
-- Tabel catalog global seperti `canonical_tracks` dan `source_tracks` bisa readonly untuk authenticated user, atau ditulis hanya lewat function/server-side flow.
+- Semua 10 tabel `public` sudah `enable row level security`.
+- Ada 34 policy: 4 own-row policy untuk setiap tabel user-scoped, dan SELECT-only policy untuk `canonical_tracks` serta `source_tracks`.
+- Role `authenticated` punya CRUD grant pada tabel user-scoped.
+- Role `authenticated` hanya punya SELECT grant pada `canonical_tracks` dan `source_tracks`.
+- `canonical_tracks` dan `source_tracks` sengaja tidak punya policy INSERT/UPDATE/DELETE untuk user biasa.
 
-Sebelum mengandalkan mobile SDK, uji policy sebagai authenticated user. Jangan hanya menguji dengan admin key.
+Verifikasi struktural sudah dilakukan lewat MCP/CLI: tabel, index, FK, trigger, grant, dan policy terbaca sesuai rancangan. Tes runtime sebagai user biasa masih perlu dilakukan setelah auth mobile berjalan, karena raw SQL InsForge menolak simulasi session/JWT claim dengan pesan `Changing SQL session configuration is not allowed.`
 
 ## Workflow Aman
 
@@ -135,10 +150,10 @@ Urutan kerja:
 
 ## Checklist Sebelum Implementasi Data Mobile
 
-- [ ] Backend aktif/project baru untuk Harmonix sudah diputuskan.
+- [x] Backend aktif/project baru untuk Harmonix sudah diputuskan.
 - [ ] Anon key tersedia di env lokal mobile.
 - [ ] Auth InsForge berhasil dari mobile.
-- [ ] Schema musik sudah ada.
-- [ ] RLS sudah aktif.
+- [x] Schema musik sudah ada.
+- [x] RLS sudah aktif.
 - [ ] Policy sudah diuji sebagai user biasa.
 - [ ] Tidak ada secret backend di mobile env.

@@ -40,7 +40,7 @@ Never commit real keys. `.insforge` and local env files must stay ignored.
 
 ## Backend Safety
 
-- The current InsForge backend still contains non-Harmonix tables.
+- The current InsForge backend contains the Harmonix public schema.
 - Do not run destructive database changes without explicit confirmation.
 - Add RLS before mobile reads or writes user-scoped tables directly.
 - Use InsForge Functions for any operation that needs server-only credentials.
