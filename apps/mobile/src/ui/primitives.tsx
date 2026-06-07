@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { TextInputProps, ViewProps } from "react-native";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors, radii, spacing, typography } from "@/theme/tokens";
@@ -31,6 +32,8 @@ export function ScreenHeader({
 export function Field({
   label,
   error,
+  style,
+  multiline,
   ...props
 }: TextInputProps & {
   label: string;
@@ -42,7 +45,8 @@ export function Field({
       <TextInput
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
-        style={[styles.input, error ? styles.inputError : null]}
+        multiline={multiline}
+        style={[styles.input, multiline ? styles.inputMultiline : null, error ? styles.inputError : null, style]}
         {...props}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -56,12 +60,16 @@ export function Button({
   variant = "primary",
   disabled,
   loading,
+  icon,
+  size = "md",
 }: {
   label: string;
   onPress: () => void;
   variant?: "primary" | "secondary" | "ghost" | "danger";
   disabled?: boolean;
   loading?: boolean;
+  icon?: ReactNode;
+  size?: "sm" | "md";
 }) {
   const isDisabled = disabled || loading;
 
@@ -72,13 +80,23 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        size === "sm" ? styles.buttonSm : null,
         styles[variant],
         isDisabled ? styles.buttonDisabled : null,
         pressed && !isDisabled ? styles.buttonPressed : null,
       ]}
     >
       {loading ? <ActivityIndicator color={variant === "primary" ? colors.accentText : colors.text} /> : null}
-      <Text style={[styles.buttonLabel, variant === "primary" ? styles.primaryLabel : null]}>{label}</Text>
+      {!loading && icon ? icon : null}
+      <Text
+        style={[
+          styles.buttonLabel,
+          size === "sm" ? styles.buttonLabelSm : null,
+          variant === "primary" ? styles.primaryLabel : null,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -111,6 +129,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xl,
     padding: spacing.xl,
+    paddingBottom: spacing.xxl,
     backgroundColor: colors.background,
   },
   header: {
@@ -149,8 +168,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
     color: colors.text,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
     fontSize: typography.body,
+  },
+  inputMultiline: {
+    minHeight: 88,
+    paddingTop: spacing.md,
+    textAlignVertical: "top",
   },
   inputError: {
     borderColor: colors.danger,
@@ -167,6 +191,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
+  },
+  buttonSm: {
+    minHeight: 38,
+    paddingHorizontal: spacing.md,
   },
   primary: {
     backgroundColor: colors.accent,
@@ -194,6 +222,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: typography.body,
     fontWeight: "800",
+  },
+  buttonLabelSm: {
+    fontSize: typography.small,
   },
   primaryLabel: {
     color: colors.accentText,
@@ -226,11 +257,7 @@ const styles = StyleSheet.create({
   },
   empty: {
     gap: spacing.sm,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    backgroundColor: colors.surface,
+    paddingVertical: spacing.xl,
   },
   emptyTitle: {
     color: colors.text,

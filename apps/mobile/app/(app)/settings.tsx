@@ -1,45 +1,100 @@
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
+import { LogOut, Save, Server } from "lucide-react-native";
 import { useAuth } from "@/auth/auth-context";
 import {
   ensureSourceConfigs,
+  getOrCreateProfile,
+  updateProfile,
+  type ProfileRecord,
   updateSourceConfig,
   type SourceConfigRecord,
 } from "@/lib/harmonix-data";
 import { INSFORGE_URL } from "@/lib/insforge";
-import { Button, Notice, ScreenHeader } from "@/ui/primitives";
+import { Button, Field, Notice, ScreenHeader } from "@/ui/primitives";
+import { BrandMark, SectionHeader } from "@/ui/music";
 import { colors, radii, spacing, typography } from "@/theme/tokens";
 
 export default function SettingsScreen() {
   const { signOut, user } = useAuth();
+  const [profile, setProfile] = useState<ProfileRecord | null>(null);
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [sources, setSources] = useState<SourceConfigRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    ensureSourceConfigs()
-      .then((nextSources) => {
+    async function loadSettings() {
+      if (!user) {
+        return;
+      }
+
+      setError(null);
+      setIsProfileLoading(true);
+
+      try {
+        const [nextProfile, nextSources] = await Promise.all([
+          getOrCreateProfile(user),
+          ensureSourceConfigs(),
+        ]);
+
         if (mounted) {
+          setProfile(nextProfile);
+          setDisplayName(nextProfile.display_name ?? "");
+          setBio(nextProfile.bio ?? "");
           setSources(nextSources);
         }
-      })
-      .catch((nextError) => {
+      } catch (nextError) {
         if (mounted) {
           setError(nextError instanceof Error ? nextError.message : "Unable to load source settings.");
         }
-      });
+      } finally {
+        if (mounted) {
+          setIsProfileLoading(false);
+        }
+      }
+    }
+
+    loadSettings();
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user]);
+
+  async function handleSaveProfile() {
+    if (!user) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setIsSavingProfile(true);
+
+    try {
+      const updated = await updateProfile(user.id, { displayName, bio });
+      setProfile(updated);
+      setDisplayName(updated.display_name ?? "");
+      setBio(updated.bio ?? "");
+      setSuccess("Profile saved.");
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Unable to save profile.");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }
 
   async function handleToggle(source: SourceConfigRecord) {
     setError(null);
+    setSuccess(null);
     setUpdatingId(source.id);
 
     try {
@@ -54,6 +109,7 @@ export default function SettingsScreen() {
 
   async function handleSignOut() {
     setError(null);
+    setSuccess(null);
     setIsSigningOut(true);
 
     try {
@@ -68,14 +124,55 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.scroll}>
-      <ScreenHeader eyebrow="Account" title="Settings" body={user?.email ?? "Signed in"} />
+      <View style={styles.accountHero}>
+        <BrandMark size={54} />
+        <View style={styles.accountCopy}>
+          <ScreenHeader
+            eyebrow="Account"
+            title="Settings"
+            body={profile?.display_name || user?.email || "Signed in"}
+          />
+        </View>
+      </View>
       {error ? <Notice tone="danger">{error}</Notice> : null}
+      {success ? <Notice tone="success">{success}</Notice> : null}
       <View style={styles.panel}>
-        <Text style={styles.panelLabel}>Backend</Text>
-        <Text style={styles.panelValue}>{INSFORGE_URL}</Text>
+        <View style={styles.panelTop}>
+          <Server color={colors.cyan} size={20} strokeWidth={2.4} />
+          <Text style={styles.panelLabel}>Backend</Text>
+        </View>
+        <Text style={styles.panelValue} numberOfLines={1}>
+          {INSFORGE_URL}
+        </Text>
       </View>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Sources</Text>
+        <SectionHeader title="Profile" />
+        <View style={styles.form}>
+          <Field
+            label="Display name"
+            value={displayName}
+            onChangeText={setDisplayName}
+            editable={!isProfileLoading && !isSavingProfile}
+          />
+          <Field
+            label="Bio"
+            value={bio}
+            onChangeText={setBio}
+            editable={!isProfileLoading && !isSavingProfile}
+            multiline
+            numberOfLines={3}
+          />
+          <Button
+            label="Save profile"
+            onPress={handleSaveProfile}
+            loading={isSavingProfile}
+            disabled={isProfileLoading}
+            icon={<Save color={colors.accentText} size={18} strokeWidth={2.5} />}
+          />
+        </View>
+      </View>
+      <View style={styles.section}>
+        <SectionHeader title="Sources" />
         {sources.map((source) => (
           <Pressable
             key={source.id}
@@ -97,7 +194,13 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </View>
-      <Button label="Sign out" variant="danger" onPress={handleSignOut} loading={isSigningOut} />
+      <Button
+        label="Sign out"
+        variant="danger"
+        onPress={handleSignOut}
+        loading={isSigningOut}
+        icon={<LogOut color={colors.danger} size={18} strokeWidth={2.5} />}
+      />
     </ScrollView>
   );
 }
@@ -110,6 +213,17 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.xl,
     padding: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: 150,
+  },
+  accountHero: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+  },
+  accountCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   panel: {
     borderRadius: radii.md,
@@ -117,6 +231,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     backgroundColor: colors.surface,
+  },
+  panelTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   panelLabel: {
     color: colors.muted,
@@ -131,6 +250,9 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: spacing.md,
+  },
+  form: {
+    gap: spacing.lg,
   },
   sectionTitle: {
     color: colors.text,

@@ -1,8 +1,10 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
+import { UserPlus } from "lucide-react-native";
 import { useAuth } from "@/auth/auth-context";
-import { Button, Field, Notice, Screen, ScreenHeader } from "@/ui/primitives";
+import { Button, Field, Notice } from "@/ui/primitives";
+import { AuthStage } from "@/ui/music";
 import { colors, spacing, typography } from "@/theme/tokens";
 
 export default function SignUpScreen() {
@@ -42,8 +44,7 @@ export default function SignUpScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboard}
     >
-      <Screen style={styles.screen}>
-        <ScreenHeader eyebrow="Harmonix" title="Create account" body="Email verification uses a code." />
+      <AuthStage title="Build your music home." body="Create a profile for playlists, source preferences, and cross-library discovery.">
         <View style={styles.form}>
           {error ? <Notice tone="danger">{error}</Notice> : null}
           <Field label="Name" value={name} onChangeText={setName} autoComplete="name" />
@@ -68,12 +69,13 @@ export default function SignUpScreen() {
             onPress={handleSubmit}
             loading={isSubmitting}
             disabled={!email.trim() || password.length < 6}
+            icon={<UserPlus color={colors.accentText} size={18} strokeWidth={2.5} />}
           />
           <Link href="/(auth)/sign-in" asChild>
             <Text style={styles.link}>Back to sign in</Text>
           </Link>
         </View>
-      </Screen>
+      </AuthStage>
     </KeyboardAvoidingView>
   );
 }
@@ -82,9 +84,6 @@ const styles = StyleSheet.create({
   keyboard: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  screen: {
-    justifyContent: "center",
   },
   form: {
     gap: spacing.lg,

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import * as SecureStore from "expo-secure-store";
 import { insforge } from "@/lib/insforge";
 import { toAppErrorMessage } from "@/lib/errors";
 
@@ -31,6 +32,28 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const sessionStorageKey = "harmonix.auth.session.v1";
+
+type StoredSession = {
+  accessToken: string;
+  user: AuthUser;
+};
+
+let secureStoreAvailable: boolean | null = null;
+
+async function canUseSecureStore() {
+  if (secureStoreAvailable !== null) {
+    return secureStoreAvailable;
+  }
+
+  try {
+    secureStoreAvailable = await SecureStore.isAvailableAsync();
+  } catch {
+    secureStoreAvailable = false;
+  }
+
+  return secureStoreAvailable;
+}
 
 function normalizeUser(user: unknown): AuthUser | null {
   if (!user || typeof user !== "object") {
@@ -60,6 +83,61 @@ function normalizeUser(user: unknown): AuthUser | null {
   };
 }
 
+function normalizeStoredSession(value: unknown): StoredSession | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const accessToken = typeof record.accessToken === "string" ? record.accessToken : null;
+  const user = normalizeUser(record.user);
+
+  if (!accessToken || !user) {
+    return null;
+  }
+
+  return { accessToken, user };
+}
+
+async function readStoredSession() {
+  if (!(await canUseSecureStore())) {
+    return null;
+  }
+
+  const raw = await SecureStore.getItemAsync(sessionStorageKey);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return normalizeStoredSession(JSON.parse(raw));
+  } catch {
+    await SecureStore.deleteItemAsync(sessionStorageKey);
+    return null;
+  }
+}
+
+async function writeStoredSession(session: StoredSession) {
+  if (!(await canUseSecureStore())) {
+    return;
+  }
+
+  await SecureStore.setItemAsync(sessionStorageKey, JSON.stringify(session));
+}
+
+async function clearStoredSession() {
+  insforge.setAccessToken(null);
+
+  if (await canUseSecureStore()) {
+    await SecureStore.deleteItemAsync(sessionStorageKey);
+  }
+}
+
+async function activateSession(accessToken: string, user: AuthUser) {
+  insforge.setAccessToken(accessToken);
+  await writeStoredSession({ accessToken, user });
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,24 +149,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(toAppErrorMessage(error, "Unable to load current user."));
     }
 
-    setUser(normalizeUser(data.user));
+    const nextUser = normalizeUser(data?.user);
+    setUser(nextUser);
+
+    const storedSession = await readStoredSession();
+    if (storedSession?.accessToken && nextUser) {
+      await writeStoredSession({ accessToken: storedSession.accessToken, user: nextUser });
+    }
   }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    insforge.auth
-      .getCurrentUser()
-      .then(({ data }) => {
+    async function bootstrap() {
+      const storedSession = await readStoredSession();
+      if (storedSession) {
+        insforge.setAccessToken(storedSession.accessToken);
+
         if (mounted) {
-          setUser(normalizeUser(data.user));
+          setUser(storedSession.user);
         }
-      })
-      .finally(() => {
-        if (mounted) {
-          setIsLoading(false);
+      }
+
+      const { data, error } = await insforge.auth.getCurrentUser();
+      if (!mounted) {
+        return;
+      }
+
+      const nextUser = error ? null : normalizeUser(data?.user);
+      if (nextUser) {
+        setUser(nextUser);
+
+        if (storedSession?.accessToken) {
+          await writeStoredSession({ accessToken: storedSession.accessToken, user: nextUser });
         }
-      });
+      } else {
+        await clearStoredSession();
+        setUser(null);
+      }
+    }
+
+    bootstrap().finally(() => {
+      if (mounted) {
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       mounted = false;
@@ -102,7 +207,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(toAppErrorMessage(error, "Unable to sign in."));
     }
 
-    setUser(normalizeUser(data?.user));
+    const nextUser = normalizeUser(data?.user);
+    if (!data?.accessToken || !nextUser) {
+      throw new Error("Unable to sign in because the session token was not returned.");
+    }
+
+    await activateSession(data.accessToken, nextUser);
+    setUser(nextUser);
   }, []);
 
   const signUp = useCallback(async ({ email, password, name }: SignUpInput) => {
@@ -114,6 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const nextUser = normalizeUser(data?.user);
     if (nextUser && data?.accessToken) {
+      await activateSession(data.accessToken, nextUser);
       setUser(nextUser);
     }
 
@@ -127,7 +239,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(toAppErrorMessage(error, "Unable to verify email."));
     }
 
-    setUser(normalizeUser(data?.user));
+    const nextUser = normalizeUser(data?.user);
+    if (!data?.accessToken || !nextUser) {
+      throw new Error("Unable to verify email because the session token was not returned.");
+    }
+
+    await activateSession(data.accessToken, nextUser);
+    setUser(nextUser);
   }, []);
 
   const resendVerification = useCallback(async (email: string) => {
@@ -140,12 +258,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     const { error } = await insforge.auth.signOut();
+    await clearStoredSession();
+    setUser(null);
 
     if (error) {
       throw new Error(toAppErrorMessage(error, "Unable to sign out."));
     }
-
-    setUser(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(

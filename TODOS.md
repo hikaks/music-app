@@ -32,7 +32,7 @@ Checklist ini hanya memuat pekerjaan yang berkaitan dengan mobile app dan InsFor
 - [x] Buat app shell dengan route group auth dan tabs.
 - [x] Buat theme tokens untuk mobile UI.
 - [ ] Tambahkan TanStack Query bila mulai ada server state kompleks.
-- [ ] Tambahkan Expo SecureStore bila session/token perlu persist manual.
+- [x] Tambahkan Expo SecureStore bila session/token perlu persist manual.
 
 ## Phase 2 - InsForge Auth
 
@@ -74,7 +74,10 @@ Target tabel:
 - [x] Library screen.
 - [x] Playlists screen.
 - [x] Settings screen.
-- [~] Playlist create/edit flow.
+- [x] Redesign music app shell: tab icons, branded auth, dashboard, visual library cards, and persistent mini player.
+- [x] Real music search untuk public sources awal: Deezer dan Audius, dengan Jamendo optional via env client id.
+- [x] Save hasil search ke playlist default lewat RPC backend aman, tanpa membuka write permission katalog global ke mobile.
+- [x] Playlist create/edit flow.
 - [x] Source enable/disable flow.
 - [ ] Recently played flow.
 

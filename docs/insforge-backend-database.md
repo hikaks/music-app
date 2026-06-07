@@ -23,6 +23,7 @@ Migration yang sudah diterapkan:
 
 - `20260607115730_create-harmonix-music-schema.sql`
 - `20260607120241_tighten-harmonix-catalog-permissions.sql`
+- `20260608002000_add-track-to-playlist-rpc.sql`
 
 Tabel `public` aktif:
 
@@ -117,6 +118,7 @@ Status RLS saat ini:
 - Role `authenticated` punya CRUD grant pada tabel user-scoped.
 - Role `authenticated` hanya punya SELECT grant pada `canonical_tracks` dan `source_tracks`.
 - `canonical_tracks` dan `source_tracks` sengaja tidak punya policy INSERT/UPDATE/DELETE untuk user biasa.
+- Mobile menambahkan hasil search ke playlist lewat RPC `public.add_track_to_playlist(uuid, jsonb)`, sehingga ownership playlist tetap dicek dengan `auth.uid()` dan katalog global tetap read-only dari client.
 
 Verifikasi struktural sudah dilakukan lewat MCP/CLI: tabel, index, FK, trigger, grant, dan policy terbaca sesuai rancangan. Tes runtime sebagai user biasa masih perlu dilakukan setelah auth mobile berjalan, karena raw SQL InsForge menolak simulasi session/JWT claim dengan pesan `Changing SQL session configuration is not allowed.`
 

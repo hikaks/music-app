@@ -1,8 +1,10 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
+import { MailCheck, RefreshCw } from "lucide-react-native";
 import { useAuth } from "@/auth/auth-context";
-import { Button, Field, Notice, Screen, ScreenHeader } from "@/ui/primitives";
+import { Button, Field, Notice } from "@/ui/primitives";
+import { AuthStage } from "@/ui/music";
 import { colors, spacing, typography } from "@/theme/tokens";
 
 export default function VerifyEmailScreen() {
@@ -51,8 +53,7 @@ export default function VerifyEmailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboard}
     >
-      <Screen style={styles.screen}>
-        <ScreenHeader eyebrow="Harmonix" title="Verify email" body="Enter the 6 digit code." />
+      <AuthStage title="Confirm your listening profile." body="Enter the code from your email to unlock your Harmonix library.">
         <View style={styles.form}>
           {error ? <Notice tone="danger">{error}</Notice> : null}
           {message ? <Notice tone="success">{message}</Notice> : null}
@@ -78,6 +79,7 @@ export default function VerifyEmailScreen() {
             onPress={handleVerify}
             loading={isSubmitting}
             disabled={!email.trim() || otp.trim().length !== 6}
+            icon={<MailCheck color={colors.accentText} size={18} strokeWidth={2.5} />}
           />
           <Button
             label="Resend code"
@@ -85,12 +87,13 @@ export default function VerifyEmailScreen() {
             onPress={handleResend}
             loading={isResending}
             disabled={!email.trim()}
+            icon={<RefreshCw color={colors.text} size={18} strokeWidth={2.4} />}
           />
           <Link href="/(auth)/sign-in" asChild>
             <Text style={styles.link}>Back to sign in</Text>
           </Link>
         </View>
-      </Screen>
+      </AuthStage>
     </KeyboardAvoidingView>
   );
 }
@@ -99,9 +102,6 @@ const styles = StyleSheet.create({
   keyboard: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  screen: {
-    justifyContent: "center",
   },
   form: {
     gap: spacing.lg,
